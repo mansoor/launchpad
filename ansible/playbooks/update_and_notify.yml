@@ -1,0 +1,23 @@
+---
+- name: Update Ubuntu server and check for reboot
+  hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: Update packages
+      apt:
+        upgrade: dist
+        update_cache: yes
+      register: update_result
+
+    - name: Check if reboot is required
+      command: needs-restarting -r
+      changed_when: false
+      register: reboot_required
+      ignore_errors: true
+
+    - name: Send Google Chat message if reboot is required
+      when: reboot_required.stdout | length > 0
+      community.google.gchat:
+        webhook_url: https://chat.googleapis.com/v1/spaces/AAAAI0JtzpI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=NnDzDzrvakhQftTqILig-Ev9ygy-TwqQLN9Z4D8d2Pk%3D
+        message: "Reboot is required on {{ inventory_hostname }}."
